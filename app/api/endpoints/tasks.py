@@ -3,8 +3,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Security
 
 from app.api.schemas.task import TaskCreate, TaskUpdate, TaskResponse
-from app.core.dependencies import get_task_repository
+from app.core.dependencies import get_task_repository, get_connection_manager
 from app.core.security import verify_jwt_token
+from app.core.websockets import ConnectionManager
 from app.db.repositories.task_repository import TaskRepository
 
 router = APIRouter(
@@ -22,10 +23,16 @@ router = APIRouter(
 )
 async def create_task(
         task: TaskCreate,
-        task_repo: TaskRepository = Depends(get_task_repository)
+        task_repo: TaskRepository = Depends(get_task_repository),
+        manager: ConnectionManager = Depends(get_connection_manager)
 ):
     db_task = await task_repo.create_task(task)
-    return db_task
+
+    task_response = TaskResponse.model_validate(db_task)
+    message = manager.prepare_message("task_created", task_response)
+    await manager.broadcast(message)
+
+    return task_response
 
 
 @router.get(
@@ -68,12 +75,18 @@ async def read_task(
 async def update_task(
         task_id: int,
         task: TaskUpdate,
-        task_repo: TaskRepository = Depends(get_task_repository)
+        task_repo: TaskRepository = Depends(get_task_repository),
+        manager: ConnectionManager = Depends(get_connection_manager)
 ):
     update_task = await task_repo.update_task(task_id, task)
     if not update_task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
-    return update_task
+
+    task_response = TaskResponse.model_validate(update_task)
+    message = manager.prepare_message("task_updated", task_response)
+    await manager.broadcast(message)
+
+    return task_response
 
 
 @router.delete(

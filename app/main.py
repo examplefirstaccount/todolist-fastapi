@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
-from app.api.endpoints import users, tasks
+from app.api.endpoints import users, tasks, websocket
 from app.core.config import settings
 from app.db.database import async_session_maker
 
@@ -31,6 +31,7 @@ app = FastAPI(
 )
 app.include_router(users.router)
 app.include_router(tasks.router)
+app.include_router(websocket.router)
 
 if __name__ == "__main__":
     import uvicorn

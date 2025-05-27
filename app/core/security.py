@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, UTC
 from typing import Optional
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, WebSocket, WebSocketException
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
@@ -68,3 +68,21 @@ def verify_jwt_token(token: str = Depends(oauth2_scheme)):
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token",
                             headers={"WWW-Authenticate": "Bearer"})
+
+
+async def authenticate_websocket(websocket: WebSocket, token: Optional[str] = None):
+    """Authenticate WebSocket connection using JWT."""
+    token = token or websocket.query_params.get("token")
+    if token is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Unauthorized")
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if not username:
+            raise ValueError("Missing 'sub' in token payload")
+        return username
+    except (jwt.ExpiredSignatureError, jwt.PyJWTError, ValueError) as e:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=str(e))
