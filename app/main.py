@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
-from app.api.endpoints import users, tasks, websocket
+from app.api.endpoints import auth, tasks, websocket
 from app.core.config import settings
 from app.db.database import async_session_maker
 

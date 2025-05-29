@@ -3,10 +3,10 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Security
 
 from app.api.schemas.task import TaskCreate, TaskUpdate, TaskResponse
-from app.core.dependencies import get_task_repository, get_connection_manager
+from app.api.dependencies.dependencies import get_task_repository, get_connection_manager
 from app.core.security import verify_jwt_token
 from app.core.websockets import ConnectionManager
-from app.db.repositories.task_repository import TaskRepository
+from app.repositories import TaskRepository
 
 router = APIRouter(
     prefix="/tasks",

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.schemas.user import UserCreate, UserResponse, UserLogin
-from app.core.dependencies import get_user_repository
+from app.api.dependencies.dependencies import get_user_repository
 from app.core.security import get_password_hash, authenticate_user, create_jwt_token
-from app.db.repositories.user_repository import UserRepository
+from app.repositories import UserRepository
 
 router = APIRouter()
 

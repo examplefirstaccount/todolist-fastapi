@@ -3,8 +3,8 @@ from fastapi import Depends
 
 from app.core.websockets import ConnectionManager
 from app.db.database import get_db
-from app.db.repositories.task_repository import TaskRepository
-from app.db.repositories.user_repository import UserRepository
+from app.repositories import TaskRepository
+from app.repositories import UserRepository
 
 
 async def get_task_repository(session: AsyncSession = Depends(get_db)) -> TaskRepository:

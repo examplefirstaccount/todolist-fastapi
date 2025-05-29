@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, WebSocketException
 
-from app.core.dependencies import get_connection_manager
+from app.api.dependencies.dependencies import get_connection_manager
 from app.core.security import authenticate_websocket
 from app.core.websockets import ConnectionManager
 
