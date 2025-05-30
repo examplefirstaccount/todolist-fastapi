@@ -31,6 +31,9 @@ class TokenError(Exception):
     def __str__(self):
         return self.message
 
+class PermissionDeniedError(Exception):
+    """Base exception for permission denied"""
+
 
 # User
 class UserNotFoundError(NotFoundError):
@@ -43,6 +46,32 @@ class UserAlreadyExistsError(AlreadyExistsError):
     def __init__(self, username: str):
         super().__init__("User", username)
         self.username = username
+
+
+# Project
+class ProjectNotFoundError(NotFoundError):
+    """Raised when a project is not found"""
+    def __init__(self, identifier: str | int):
+        super().__init__("Project", identifier)
+
+class ProjectAlreadyExistsError(AlreadyExistsError):
+    """Raised when trying to create a project that already exists"""
+    def __init__(self, project_id: str):
+        super().__init__("Project", project_id)
+        self.project_id = project_id
+
+
+# Task
+class TaskNotFoundError(NotFoundError):
+    """Raised when a task is not found"""
+    def __init__(self, identifier: str | int):
+        super().__init__("Task", identifier)
+
+class TaskAlreadyExistsError(AlreadyExistsError):
+    """Raised when trying to create a task that already exists"""
+    def __init__(self, task_id: str):
+        super().__init__("Task", task_id)
+        self.project_id = task_id
 
 
 # Auth

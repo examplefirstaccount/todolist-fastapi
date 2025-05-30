@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 
 from app.db.database import async_session_maker
-from app.repositories.task_repository import TaskRepository
-from app.repositories.user_repository import UserRepository
+from app.repositories import TaskRepository, ProjectRepository, UserRepository
 
 
 class IUnitOfWork(ABC):
@@ -31,6 +30,7 @@ class UnitOfWork(IUnitOfWork):
         self.session = self.session_factory()
         self.user = UserRepository(self.session)
         self.task = TaskRepository(self.session)
+        self.project = ProjectRepository(self.session)
         return self
 
     async def __aexit__(self, *args):

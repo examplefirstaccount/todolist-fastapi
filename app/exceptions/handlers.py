@@ -8,6 +8,7 @@ from app.exceptions import (
     AlreadyExistsError,
     UnauthorizedError,
     ForbiddenError,
+    PermissionDeniedError
 )
 
 
@@ -47,6 +48,13 @@ def register_exception_handlers(app: FastAPI):
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"detail": str(exc)},
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    @app.exception_handler(PermissionDeniedError)
+    async def permission_exception_handler(_: Request, exc: PermissionDeniedError):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": str(exc)},
         )
 
     @app.exception_handler(Exception)
