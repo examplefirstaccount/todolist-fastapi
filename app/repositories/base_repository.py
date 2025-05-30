@@ -57,7 +57,7 @@ class SQLAlchemyRepository(AbstractRepository[ModelType], Generic[ModelType]):
         return result.scalars().first()
 
     async def add(self, data: Dict[str, Any]) -> ModelType:
-        stmt = insert(self.model).values(**data)
+        stmt = insert(self.model).values(**data).returning(self.model)
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
