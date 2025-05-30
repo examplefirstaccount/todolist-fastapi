@@ -37,3 +37,14 @@ print(decoded_location)
 async def read_items(user_agent: Annotated[str | None, Header()] = None):
     return {"User-Agent": user_agent}
 ```
+
+## TODO
+
+- Team collaborations (needs a many-to-many User ↔ Project or Project ↔ TeamMember model)
+- Sharing tasks/projects with permission levels
+- Assigning projects to specific users or groups
+- WebSocket-based real-time updates
+- Notifications/reminders
+- Labels/tags
+- File attachments
+- Subscriptions

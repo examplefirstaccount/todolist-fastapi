@@ -2,12 +2,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
-from app.api.endpoints import auth, tasks, websocket
+from app.api.endpoints import auth
 from app.core.config import settings
 from app.db.database import async_session_maker
+from app.exceptions.handlers import register_exception_handlers
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     # Startup code
     try:
         db = async_session_maker()
@@ -29,9 +30,10 @@ app = FastAPI(
     debug=settings.DEBUG,
     lifespan=lifespan
 )
-app.include_router(users.router)
-app.include_router(tasks.router)
-app.include_router(websocket.router)
+app.include_router(auth.router)
+# app.include_router(tasks.router)
+# app.include_router(websocket.router)
+register_exception_handlers(app)
 
 if __name__ == "__main__":
     import uvicorn
