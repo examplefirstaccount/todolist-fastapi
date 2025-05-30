@@ -1,18 +1,24 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Security
+from fastapi import APIRouter, Depends, status, Security
 
+from app.api.dependencies.dependencies import (
+    get_task_service,
+    get_user_service,
+    get_current_username_http,
+    get_connection_manager,
+    TaskService,
+    UserService
+)
 from app.api.schemas.task import TaskCreate, TaskUpdate, TaskResponse
-from app.api.dependencies.dependencies import get_task_repository, get_connection_manager
-from app.core.security import verify_jwt_token
 from app.core.websockets import ConnectionManager
-from app.repositories import TaskRepository
 
 router = APIRouter(
     prefix="/tasks",
     tags=["tasks"],
-    dependencies=[Security(verify_jwt_token)]
+    dependencies=[Security(get_current_username_http)]
 )
+
 
 @router.post(
     "/",
@@ -23,12 +29,14 @@ router = APIRouter(
 )
 async def create_task(
         task: TaskCreate,
-        task_repo: TaskRepository = Depends(get_task_repository),
+        username: str = Depends(get_current_username_http),
+        task_service: TaskService = Depends(get_task_service),
+        user_service: UserService = Depends(get_user_service),
         manager: ConnectionManager = Depends(get_connection_manager)
 ):
-    db_task = await task_repo.create_task(task)
+    user = await user_service.get_user_by_username(username)
+    task_response = await task_service.create_task(user.id, task)
 
-    task_response = TaskResponse.model_validate(db_task)
     message = manager.prepare_message("task_created", task_response)
     await manager.broadcast(message)
 
@@ -44,9 +52,12 @@ async def create_task(
 async def read_tasks(
         skip: int = 0,
         limit: int = 100,
-        task_repo: TaskRepository = Depends(get_task_repository)
+        username: str = Depends(get_current_username_http),
+        task_service: TaskService = Depends(get_task_service),
+        user_service: UserService = Depends(get_user_service)
 ):
-    tasks = await task_repo.get_tasks(skip=skip, limit=limit)
+    user = await user_service.get_user_by_username(username)
+    tasks = await task_service.get_tasks(user.id, skip=skip, limit=limit)
     return tasks
 
 
@@ -58,11 +69,12 @@ async def read_tasks(
 )
 async def read_task(
         task_id: int,
-        task_repo: TaskRepository = Depends(get_task_repository)
+        username: str = Depends(get_current_username_http),
+        task_service: TaskService = Depends(get_task_service),
+        user_service: UserService = Depends(get_user_service)
 ):
-    task = await task_repo.get_task_by_id(task_id)
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    user = await user_service.get_user_by_username(username)
+    task = await task_service.get_task(user.id, task_id)
     return task
 
 
@@ -75,14 +87,14 @@ async def read_task(
 async def update_task(
         task_id: int,
         task: TaskUpdate,
-        task_repo: TaskRepository = Depends(get_task_repository),
+        username: str = Depends(get_current_username_http),
+        task_service: TaskService = Depends(get_task_service),
+        user_service: UserService = Depends(get_user_service),
         manager: ConnectionManager = Depends(get_connection_manager)
 ):
-    update_task = await task_repo.update_task(task_id, task)
-    if not update_task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    user = await user_service.get_user_by_username(username)
+    task_response = await task_service.update_task(user.id, task_id, task)
 
-    task_response = TaskResponse.model_validate(update_task)
     message = manager.prepare_message("task_updated", task_response)
     await manager.broadcast(message)
 
@@ -97,9 +109,10 @@ async def update_task(
 )
 async def delete_task(
         task_id: int,
-        task_repo: TaskRepository = Depends(get_task_repository)
+        username: str = Depends(get_current_username_http),
+        task_service: TaskService = Depends(get_task_service),
+        user_service: UserService = Depends(get_user_service)
 ):
-    deleted = await task_repo.delete_task(task_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    user = await user_service.get_user_by_username(username)
+    await task_service.delete_task(user.id, task_id)
     return None
