@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class PriorityLevel(Enum):
+class PriorityLevel(str, Enum):
     low = "low"
     medium = "medium"
     high = "high"
