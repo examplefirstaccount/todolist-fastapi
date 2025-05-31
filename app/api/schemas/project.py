@@ -22,11 +22,5 @@ class ProjectResponse(ProjectBase):
     id: int
     owner_id: int
     created_at: datetime
-    tasks: list['TaskResponse'] = []
 
     model_config = ConfigDict(from_attributes=True)
-
-
-from app.api.schemas.task import TaskResponse
-
-ProjectResponse.model_rebuild()
