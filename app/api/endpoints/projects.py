@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status, Security
+from fastapi import APIRouter, Depends, status, Security, Query
 
 from app.api.dependencies.dependencies import (
     get_project_service,
@@ -11,6 +11,7 @@ from app.api.dependencies.dependencies import (
     UserService
 )
 from app.api.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.api.schemas.task import TaskResponse, PriorityLevel
 from app.core.websockets import ConnectionManager
 
 router = APIRouter(
@@ -76,6 +77,38 @@ async def read_project(
     user = await user_service.get_user_by_username(username)
     project = await project_service.get_project(user.id, project_id)
     return project
+
+
+@router.get(
+    "/{project_id}/tasks",
+    response_model=List[TaskResponse],
+    summary="Get tasks for a project",
+    description="Retrieves tasks for a project."
+)
+async def get_tasks(
+        project_id: int,
+        completed: bool | None = Query(None),
+        priority: PriorityLevel | None = Query(None),
+        sort_by: str = Query("created_at"),
+        sort_order: str = Query("desc"),
+        skip: int = 0,
+        limit: int | None = None,
+        username: str = Depends(get_current_username_http),
+        project_service: ProjectService = Depends(get_project_service),
+        user_service: UserService = Depends(get_user_service)
+):
+    user = await user_service.get_user_by_username(username)
+    tasks = await project_service.get_project_tasks(
+        user_id=user.id,
+        project_id=project_id,
+        completed=completed,
+        priority=priority,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        skip=skip,
+        limit=limit
+    )
+    return tasks
 
 
 @router.put(
