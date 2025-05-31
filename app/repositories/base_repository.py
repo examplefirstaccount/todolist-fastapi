@@ -46,8 +46,28 @@ class SQLAlchemyRepository(AbstractRepository[ModelType], Generic[ModelType]):
         if self.model is None:
             raise NotImplementedError("Repository must have a 'model' class attribute defined.")
 
-    async def find_all(self, skip: int = 0, limit: int | None = None, **filter_by: Any) -> List[ModelType]:
-        stmt = select(self.model).filter_by(**filter_by).offset(skip).limit(limit)
+    async def find_all(
+            self,
+            skip: int = 0,
+            limit: int | None = None,
+            order_by: Dict[str, str] | None = None,
+            **filter_by: Any
+    ) -> List[ModelType]:
+        stmt = select(self.model).filter_by(**filter_by)
+
+        if order_by:
+            for column, direction in order_by.items():
+                sort_column = getattr(self.model, column)
+                if direction.lower() == "desc":
+                    stmt = stmt.order_by(sort_column.desc())
+                else:
+                    stmt = stmt.order_by(sort_column.asc())
+
+        if limit is not None and limit > 0:
+            stmt = stmt.limit(limit)
+            if skip > 0:
+                stmt = stmt.offset(skip)
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
