@@ -1,7 +1,10 @@
+import logging
 from abc import ABC, abstractmethod
 
 from app.db.database import async_session_maker
 from app.repositories import TaskRepository, ProjectRepository, UserRepository
+
+logger = logging.getLogger("app")
 
 
 class IUnitOfWork(ABC):
@@ -31,15 +34,19 @@ class UnitOfWork(IUnitOfWork):
         self.user = UserRepository(self.session)
         self.task = TaskRepository(self.session)
         self.project = ProjectRepository(self.session)
+        logger.debug("UoW session started")
         return self
 
     async def __aexit__(self, *args):
         await self.rollback()
         await self.session.close()
         self.session = None
+        logger.debug("UoW session closed")
 
     async def commit(self):
         await self.session.commit()
+        logger.debug("UoW committed")
 
     async def rollback(self):
         await self.session.rollback()
+        logger.debug("UoW rolled back")

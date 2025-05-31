@@ -1,8 +1,11 @@
+import logging
 from typing import List
 
 from app.api.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.exceptions import ProjectNotFoundError, PermissionDeniedError, TaskNotFoundError
 from app.utils.unitofwork import UnitOfWork
+
+logger = logging.getLogger("app")
 
 
 class TaskService:
@@ -26,6 +29,7 @@ class TaskService:
             task_response = TaskResponse.model_validate(task_db)
             await self.uow.commit()
 
+            logger.info(f"Created task {task_db.id} by user {user_id}")
             return task_response
 
     async def get_tasks(self, user_id: int, skip: int = 0, limit: int | None = None) -> List[TaskResponse]:
@@ -65,6 +69,7 @@ class TaskService:
             task_response = TaskResponse.model_validate(task_updated)
             await self.uow.commit()
 
+            logger.info(f"Updated task {task_id} by user {user_id}")
             return task_response
 
     async def delete_task(self, user_id: int, task_id: int) -> None:
@@ -79,3 +84,4 @@ class TaskService:
             if not deleted:
                 raise TaskNotFoundError(task_id)
             await self.uow.commit()
+            logger.info(f"Deleted task {task_id} by user {user_id}")

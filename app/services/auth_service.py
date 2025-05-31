@@ -1,9 +1,12 @@
+import logging
 from typing import Dict
 
 from app.api.schemas.user import UserCreate, UserResponse, UserLogin
 from app.core.security import get_password_hash, verify_password, create_jwt_token
 from app.exceptions import UserAlreadyExistsError, InvalidCredentialsError
 from app.utils.unitofwork import UnitOfWork
+
+logger = logging.getLogger("app")
 
 
 class AuthService:
@@ -23,6 +26,7 @@ class AuthService:
             user_response = UserResponse.model_validate(user_db)
             await self.uow.commit()
 
+            logger.info(f"New user registered: {user.username}")
             return user_response
 
     async def login(self, user: UserLogin) -> Dict[str, str]:
@@ -31,6 +35,7 @@ class AuthService:
             if not user_db or not verify_password(user.password, user_db.hashed_password):
                 raise InvalidCredentialsError()
 
+            logger.info(f"User logged in: {user.username}")
             return {
                 "access_token": create_jwt_token({"sub": user.username}),
                 "token_type": "bearer"

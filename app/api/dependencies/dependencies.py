@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import Depends, HTTPException, WebSocket, WebSocketException, status
@@ -9,6 +10,7 @@ from app.exceptions import TokenError
 from app.services import AuthService, TaskService, ProjectService, UserService
 from app.utils.unitofwork import UnitOfWork
 
+logger = logging.getLogger("app")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 connection_manager = ConnectionManager()
 
@@ -39,6 +41,7 @@ async def get_current_username_http(token: str = Depends(oauth2_scheme)) -> str:
         username = payload["sub"]
         return username
     except TokenError as e:
+        logger.warning(f"[HTTP] TokenError: {e.message}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=e.message,
@@ -53,6 +56,7 @@ async def get_current_username_websocket(websocket: WebSocket, token: Optional[s
         username = payload["sub"]
         return username
     except TokenError as e:
+        logger.warning(f"[WebSocket] TokenError: {e.message}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=e.message)
 

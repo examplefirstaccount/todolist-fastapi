@@ -1,9 +1,12 @@
+import logging
 from typing import List
 
 from app.api.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.api.schemas.task import TaskResponse, PriorityLevel
 from app.exceptions import ProjectNotFoundError, PermissionDeniedError
 from app.utils.unitofwork import UnitOfWork
+
+logger = logging.getLogger("app")
 
 
 class ProjectService:
@@ -19,6 +22,7 @@ class ProjectService:
             project_response = ProjectResponse.model_validate(project_db)
             await self.uow.commit()
 
+            logger.info(f"Created project {project_db.id} by user {user_id}")
             return project_response
 
     async def get_projects(self, user_id: int, skip: int = 0, limit: int | None = None) -> List[ProjectResponse]:
@@ -85,6 +89,7 @@ class ProjectService:
             project_response = ProjectResponse.model_validate(project_updated)
             await self.uow.commit()
 
+            logger.info(f"Updated project {project_id} by user {user_id}")
             return project_response
 
     async def delete_project(self, user_id: int, project_id: int) -> None:
@@ -99,3 +104,4 @@ class ProjectService:
             if not deleted:
                 raise ProjectNotFoundError(project_id)
             await self.uow.commit()
+            logger.info(f"Deleted project {project_id} by user {user_id}")

@@ -1,9 +1,12 @@
+import logging
 from typing import List
 
 from app.api.schemas.user import UserCreate, UserResponse
 from app.core.security import get_password_hash
 from app.exceptions import UserNotFoundError, UserAlreadyExistsError
 from app.utils.unitofwork import UnitOfWork
+
+logger = logging.getLogger("app")
 
 
 class UserService:
@@ -23,6 +26,7 @@ class UserService:
             user_response = UserResponse.model_validate(user_db)
             await self.uow.commit()
 
+            logger.info(f"Created user {user_db.id}")
             return user_response
 
     async def get_users(self, skip: int = 0, limit: int | None = None) -> List[UserResponse]:
@@ -54,3 +58,4 @@ class UserService:
             if not deleted:
                 raise UserNotFoundError(user_id)
             await self.uow.commit()
+            logger.info(f"Deleted user {user_id}")
