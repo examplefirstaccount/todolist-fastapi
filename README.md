@@ -40,10 +40,11 @@ async def read_items(user_agent: Annotated[str | None, Header()] = None):
 
 ## TODO
 
+- Fix priorities to act and compare in numeric (hierarchical) order, not alphabetic 
 - Team collaborations (needs a many-to-many User ↔ Project or Project ↔ TeamMember model)
 - Sharing tasks/projects with permission levels
 - Assigning projects to specific users or groups
-- WebSocket-based real-time updates
+- WebSocket-based real-time updates with centralized state saved in Redis
 - Notifications/reminders
 - Labels/tags
 - File attachments
