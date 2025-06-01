@@ -15,11 +15,13 @@ class AlreadyExistsError(Exception):
 
 class UnauthorizedError(Exception):
     """Base exception for authentication/authorization failures"""
-    pass
+    def __init__(self, message: str = "Unauthorized access"):
+        super().__init__(message)
 
 class ForbiddenError(Exception):
     """Base exception for when access is forbidden"""
-    pass
+    def __init__(self, message: str = "Action is forbidden"):
+        super().__init__(message)
 
 class TokenError(Exception):
     """Base exception for token related errors"""
@@ -33,6 +35,8 @@ class TokenError(Exception):
 
 class PermissionDeniedError(Exception):
     """Base exception for permission denied"""
+    def __init__(self, message: str = "Permission denied"):
+        super().__init__(message)
 
 
 # User
@@ -77,15 +81,18 @@ class TaskAlreadyExistsError(AlreadyExistsError):
 # Auth
 class InvalidCredentialsError(UnauthorizedError):
     """Raised when login credentials are invalid"""
-    pass
+    def __init__(self):
+        super().__init__("Invalid credentials")
 
 class InactiveUserError(ForbiddenError):
     """Raised when trying to log in with inactive user"""
-    pass
+    def __init__(self):
+        super().__init__("Inactive user")
 
 class RegistrationNotAllowedError(ForbiddenError):
     """Raised when registration is not allowed"""
-    pass
+    def __init__(self):
+        super().__init__("User registration is not allowed")
 
 
 # Token / Security

@@ -15,22 +15,27 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 connection_manager = ConnectionManager()
 
 
-async def get_auth_service(uow: UnitOfWork = Depends(UnitOfWork)) -> AuthService:
+async def get_uow() -> UnitOfWork:
+    """Dependency that provides a UnitOfWork instance."""
+    return UnitOfWork()
+
+
+async def get_auth_service(uow: UnitOfWork = Depends(get_uow)) -> AuthService:
     """Dependency that provides a AuthService instance."""
     return AuthService(uow)
 
 
-async def get_task_service(uow: UnitOfWork = Depends(UnitOfWork)) -> TaskService:
+async def get_task_service(uow: UnitOfWork = Depends(get_uow)) -> TaskService:
     """Dependency that provides a TaskService instance."""
     return TaskService(uow)
 
 
-async def get_user_service(uow: UnitOfWork = Depends(UnitOfWork)) -> UserService:
+async def get_user_service(uow: UnitOfWork = Depends(get_uow)) -> UserService:
     """Dependency that provides a UserService instance."""
     return UserService(uow)
 
 
-async def get_project_service(uow: UnitOfWork = Depends(UnitOfWork)) -> ProjectService:
+async def get_project_service(uow: UnitOfWork = Depends(get_uow)) -> ProjectService:
     """Dependency that provides a ProjectService instance."""
     return ProjectService(uow)
 
