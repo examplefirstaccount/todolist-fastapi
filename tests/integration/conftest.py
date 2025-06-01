@@ -2,8 +2,11 @@ from typing import AsyncGenerator, Any
 from datetime import datetime, timedelta, UTC
 
 import pytest
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
+from app.main import app
+from app.api.dependencies.dependencies import get_uow
 from app.core.security import get_password_hash
 from app.db.models import Base
 from app.services import AuthService, UserService, TaskService, ProjectService
@@ -53,6 +56,23 @@ async def task_service(uow_test):
 async def project_service(uow_test):
     return ProjectService(uow_test)
 
+# Test client for endpoints
+@pytest.fixture
+async def test_client(uow_test):
+    app.dependency_overrides = {get_uow: lambda: uow_test}
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        yield client
+
+# Auth headers for endpoints
+@pytest.fixture
+async def auth_headers(test_client, test_user):
+    res = await test_client.post("/auth/login", json={
+        "username": "test_user",
+        "password": "test_password"
+    })
+    token = res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
 # User service fixtures
 @pytest.fixture
 async def existing_user(uow_test):
@@ -67,7 +87,10 @@ async def existing_user(uow_test):
 
 @pytest.fixture
 async def test_user(uow_test):
-    user_data = {"username": "test_user", "hashed_password": "hash"}
+    user_data = {
+        "username": "test_user",
+        "hashed_password": get_password_hash("test_password")
+    }
     async with uow_test:
         user = await uow_test.user.add(user_data)
         await uow_test.commit()
@@ -75,7 +98,10 @@ async def test_user(uow_test):
 
 @pytest.fixture
 async def other_user(uow_test):
-    user_data = {"username": "other_user", "hashed_password": "hash"}
+    user_data = {
+        "username": "other_user",
+        "hashed_password": get_password_hash("other_password")
+    }
     async with uow_test:
         user = await uow_test.user.add(user_data)
         await uow_test.commit()
