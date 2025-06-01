@@ -12,7 +12,7 @@ class PriorityLevel(str, Enum):
 
 
 class TaskBase(BaseModel):
-    title: str = Field(..., max_length=100)
+    title: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
     is_completed: bool = False
     priority: PriorityLevel = PriorityLevel.medium
