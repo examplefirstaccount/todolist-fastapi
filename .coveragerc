@@ -1,0 +1,14 @@
+[run]
+omit =
+    app/api/dependencies/*
+    app/core/config.py
+    app/core/logger.py
+    app/db/*
+    app/exceptions/*
+    app/main.py
+    */__init__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
